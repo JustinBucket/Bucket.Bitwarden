@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Bucket.Bitwarden.Auth;
 using Newtonsoft.Json;
 
 namespace Testing.Helpers;
@@ -15,5 +16,10 @@ public static class Helper
         var secrets = JsonConvert.DeserializeObject<Secrets>(secretsText);
 
         return secrets;
+    }
+
+    public static AuthData GenerateAuthData(Secrets secrets)
+    {
+        return new AuthData(secrets.ClientId, secrets.ClientSecret);
     }
 }

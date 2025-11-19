@@ -15,6 +15,8 @@ namespace Testing
             var secrets = Helper.GenerateSecrets();
 
             Assert.IsFalse(string.IsNullOrWhiteSpace(secrets.MasterPassword));
+            Assert.IsFalse(string.IsNullOrWhiteSpace(secrets.ClientId));
+            Assert.IsFalse(string.IsNullOrWhiteSpace(secrets.ClientSecret));
         }
     }
 }
