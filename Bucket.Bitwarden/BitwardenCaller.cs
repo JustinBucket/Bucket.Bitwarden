@@ -18,7 +18,7 @@ namespace Bucket.Bitwarden
         private string _sessionKey;
         // https://identity.bitwarden.com/connect/token
 
-        public BitwardenCaller(string endpoint = @"https://api.bitwarden.com/")
+        public BitwardenCaller(string endpoint = @"https://api.bitwarden.com/public/")
         {
             _client = new HttpClient
             {
@@ -36,16 +36,19 @@ namespace Bucket.Bitwarden
             return true;
         }
 
-        // TODO: need to authenticate first
         public async Task<HttpStatusCode> UnlockVault(string masterPassword)
         {
+            // this is going to need to use their cli apparently?
+            // we have to log into the cli first, then we can maybe serve?
+            // asks for OTP in email
+            // what a mess
             // check if we've got an expiry date, meaning haven't performed authentication
             if (_authExpiryDate.Equals(DateTime.MinValue))
             {
-                // we'd need to re-authenticate, meaning passing through creds again
                 throw new AuthException("Authentication not performed");
             }
 
+            // check if passed authentication lifetime
             if (DateTime.Now > _authExpiryDate)
             {
                 throw new AuthException("Authentication expired");
