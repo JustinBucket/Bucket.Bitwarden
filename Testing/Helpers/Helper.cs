@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Bucket.Bitwarden;
 using Bucket.Bitwarden.Auth;
 using Newtonsoft.Json;
 
@@ -18,8 +19,13 @@ public static class Helper
         return secrets;
     }
 
-    public static AuthData GenerateAuthData(Secrets secrets)
+    public static AuthData GenerateAuthData(this Secrets secrets)
     {
         return new AuthData(secrets.ClientId, secrets.ClientSecret);
+    }
+
+    public static LoginData GenerateLoginData(this Secrets secrets)
+    {
+        return new LoginData(secrets.Email, secrets.MasterPassword);
     }
 }

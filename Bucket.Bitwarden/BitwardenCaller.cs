@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -12,62 +13,86 @@ namespace Bucket.Bitwarden
 {
     public class BitwardenCaller
     {
-        private readonly HttpClient _client;
-        private readonly AuthCaller _authCaller;
-        private DateTime _authExpiryDate;
+        private readonly string LoginCommand = "bw.exe login {email} {password}";
+        private readonly Process _cmd;
         private string _sessionKey;
         // https://identity.bitwarden.com/connect/token
+        // what if we made the whole thing based off the console?
 
-        public BitwardenCaller(string endpoint = @"https://api.bitwarden.com/public/")
+        public BitwardenCaller()
         {
-            _client = new HttpClient
-            {
-                BaseAddress = new Uri(endpoint)
-            };
-            _authCaller = new AuthCaller();
+            _cmd = Helpers.GenerateCmdProcess();
         }
 
-        public async Task<bool> Authenticate(AuthData data)
+        // TODO: add handling for already logged in error
+        public string Login(LoginData data)
         {
-            var authResponse = await _authCaller.Authenticate(data);
-            _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", authResponse.AccessToken);
-            _authExpiryDate = DateTime.Now.AddSeconds(authResponse.ExpiresIn);
-
-            return true;
+            // call bw.exe, passing arguments
+            var command = LoginCommand.Replace("{email}", data.Email).Replace("{password}", data.Password);
+            // var command = "dotnet --version";
+            
+            return ExecuteCommand(command);
         }
 
-        public async Task<HttpStatusCode> UnlockVault(string masterPassword)
+        private string ExecuteCommand(string command)
         {
-            // this is going to need to use their cli apparently?
-            // we have to log into the cli first, then we can maybe serve?
-            // asks for OTP in email
-            // what a mess
-            // check if we've got an expiry date, meaning haven't performed authentication
-            if (_authExpiryDate.Equals(DateTime.MinValue))
+            // var process = new Process();
+            // process.StartInfo.FileName = "cmd.exe";
+            // process.StartInfo.Arguments = $"/C {command}";
+            // process.StartInfo.UseShellExecute = false;
+            // process.StartInfo.CreateNoWindow = true;
+            // process.StartInfo.RedirectStandardInput = true;
+            // process.StartInfo.RedirectStandardOutput = true;
+            // process.Start();
+
+            // var output = process.StandardOutput.ReadToEnd();
+
+            // process.Close();
+
+            _cmd.StartInfo.Arguments = $"/C {command}";
+            _cmd.Start();
+            var output = _cmd.StandardOutput.ReadToEnd();
+            if (string.IsNullOrWhiteSpace(output))
             {
-                throw new AuthException("Authentication not performed");
+                output = _cmd.StandardError.ReadToEnd();
             }
+            _cmd.StandardInput.Close();
 
-            // check if passed authentication lifetime
-            if (DateTime.Now > _authExpiryDate)
-            {
-                throw new AuthException("Authentication expired");
+            return output;
+        }
+
+        // public async Task<HttpStatusCode> UnlockVault(string masterPassword)
+        // {
+        //     // this is going to need to use their cli apparently?
+        //     // we have to log into the cli first, then we can maybe serve?
+        //     // asks for OTP in email
+        //     // what a mess
+        //     // check if we've got an expiry date, meaning haven't performed authentication
+        //     if (_authExpiryDate.Equals(DateTime.MinValue))
+        //     {
+        //         throw new AuthException("Authentication not performed");
+        //     }
+
+        //     // check if passed authentication lifetime
+        //     if (DateTime.Now > _authExpiryDate)
+        //     {
+        //         throw new AuthException("Authentication expired");
                 
-            }
+        //     }
 
-            var passwordDto = new UnlockRequestDto(masterPassword);
-            var content = new StringContent(JsonConvert.SerializeObject(passwordDto), Encoding.UTF8, "application/json");
-            var response = await _client.PostAsync(@"unlock", content);
+        //     var passwordDto = new UnlockRequestDto(masterPassword);
+        //     var content = new StringContent(JsonConvert.SerializeObject(passwordDto), Encoding.UTF8, "application/json");
+        //     var response = await _client.PostAsync(@"unlock", content);
 
-            if (response.IsSuccessStatusCode)
-            {
-                var responseContent = await response.Content.ReadAsStringAsync();
-                var responseData = JsonConvert.DeserializeObject<UnlockData>(responseContent);
-                _sessionKey = responseData.Raw;
-            }
+        //     if (response.IsSuccessStatusCode)
+        //     {
+        //         var responseContent = await response.Content.ReadAsStringAsync();
+        //         var responseData = JsonConvert.DeserializeObject<UnlockData>(responseContent);
+        //         _sessionKey = responseData.Raw;
+        //     }
 
-            return response.StatusCode;
-        }
+        //     return response.StatusCode;
+        // }
 
     }
 }

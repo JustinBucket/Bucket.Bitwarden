@@ -10,4 +10,5 @@ public class Secrets
     public string MasterPassword { get; set; }
     public string ClientId { get; set; }
     public string ClientSecret { get; set; }
+    public string Email { get; set; }
 }

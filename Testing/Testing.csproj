@@ -24,4 +24,10 @@
     <ProjectReference Include="..\Bucket.Bitwarden\Bucket.Bitwarden.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+   <Content Include="bw.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+   </Content>
+</ItemGroup>  
+
 </Project>
