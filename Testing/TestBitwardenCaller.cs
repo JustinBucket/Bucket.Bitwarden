@@ -17,8 +17,25 @@ public class TestBitwardenCaller
         var secrets = Helper.GenerateSecrets();
         var loginData = secrets.GenerateLoginData();
 
-        var output = caller.Login(loginData);
+        caller.Login(loginData);
+        var sessionKey = Environment.GetEnvironmentVariable("BW_SESSION");
 
-        Assert.AreEqual("not blank", output);
+        Assert.IsFalse(string.IsNullOrWhiteSpace(sessionKey));
+
+        caller.Logout();
+    }
+
+    [TestMethod]
+    public void TestLogout()
+    {
+        var caller = new BitwardenCaller();
+        var secrets = Helper.GenerateSecrets();
+        var loginData = secrets.GenerateLoginData();
+
+        caller.Login(loginData);
+        caller.Logout();
+        var sessionKey = Environment.GetEnvironmentVariable("BW_SESSION");
+
+        Assert.IsTrue(string.IsNullOrWhiteSpace(sessionKey));
     }
 }
