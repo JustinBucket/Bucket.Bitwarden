@@ -4,7 +4,9 @@ using System.Diagnostics;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Bucket.Bitwarden.Auth;
 using Newtonsoft.Json;
@@ -14,8 +16,9 @@ namespace Bucket.Bitwarden
     public class BitwardenCaller
     {
         private readonly string LoginCommand = "bw.exe login {email} {password}";
+        private readonly string LogoutCommand = "bw.exe logout";
+        private readonly string SessionKeyRegex = "(?<=BW_SESSION=\").+(?=\")";
         private readonly Process _cmd;
-        private string _sessionKey;
         // https://identity.bitwarden.com/connect/token
         // what if we made the whole thing based off the console?
 
@@ -24,14 +27,23 @@ namespace Bucket.Bitwarden
             _cmd = Helpers.GenerateCmdProcess();
         }
 
-        // TODO: add handling for already logged in error
-        public string Login(LoginData data)
+        public void Login(LoginData data)
         {
             // call bw.exe, passing arguments
             var command = LoginCommand.Replace("{email}", data.Email).Replace("{password}", data.Password);
             // var command = "dotnet --version";
-            
-            return ExecuteCommand(command);
+
+            var commandOutput = ExecuteCommand(command).Trim();
+
+            var sessionKey = Regex.Matches(commandOutput, SessionKeyRegex)[0].Value;
+
+            Environment.SetEnvironmentVariable("BW_SESSION", sessionKey);
+        }
+
+        public void Logout()
+        {
+            ExecuteCommand(LogoutCommand).Trim();
+            Environment.SetEnvironmentVariable("BW_SESSION", null);
         }
 
         private string ExecuteCommand(string command)
