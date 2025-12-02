@@ -11,4 +11,6 @@ public class Secrets
     public string ClientId { get; set; }
     public string ClientSecret { get; set; }
     public string Email { get; set; }
+    public string TestVaultItemNameSingle { get; set; }
+    public string TestVaultItemNameMultiple { get; set; }
 }
