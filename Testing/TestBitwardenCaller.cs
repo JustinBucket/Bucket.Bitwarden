@@ -1,8 +1,6 @@
 using System;
-using System.Net;
-using System.Threading;
+using System.Linq;
 using Bucket.Bitwarden;
-using Bucket.Bitwarden.Auth;
 using Testing.Helpers;
 
 namespace Testing;
@@ -37,5 +35,51 @@ public class TestBitwardenCaller
         var sessionKey = Environment.GetEnvironmentVariable("BW_SESSION");
 
         Assert.IsTrue(string.IsNullOrWhiteSpace(sessionKey));
+    }
+
+    [TestMethod]
+    public void TestRetrieveSingleEntry()
+    {
+        var caller = new BitwardenCaller();
+        var secrets = Helper.GenerateSecrets();
+        var loginData = secrets.GenerateLoginData();
+
+        caller.Login(loginData);
+
+        var getParams = new GetParameters(secrets.TestVaultItemNameSingle);
+        var entries = caller.RetrieveEntry(getParams);
+
+        Assert.IsNotNull(entries);
+        Assert.AreEqual(1, entries.Count);
+
+        var entry = entries.First();
+        Assert.AreEqual(secrets.TestVaultItemNameSingle, entry.Name);
+        Assert.AreNotEqual(Guid.Empty, entry.Id);
+
+        caller.Logout();
+    }
+
+    [TestMethod]
+    public void TestRetrieveMultipleEntries()
+    {
+        var caller = new BitwardenCaller();
+        var secrets = Helper.GenerateSecrets();
+        var loginData = secrets.GenerateLoginData();
+
+        caller.Login(loginData);
+
+        var getParams = new GetParameters(secrets.TestVaultItemNameMultiple);
+        var entries = caller.RetrieveEntry(getParams);
+
+        Assert.IsNotNull(entries);
+        Assert.IsTrue(entries.Count > 1);
+
+        foreach (var entry in entries)
+        {
+            Assert.IsTrue(entry.Name.Contains(secrets.TestVaultItemNameMultiple));
+            Assert.AreNotEqual(Guid.Empty, entry.Id);
+        }
+
+        caller.Logout();
     }
 }
