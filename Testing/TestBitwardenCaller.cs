@@ -38,7 +38,7 @@ public class TestBitwardenCaller
     }
 
     [TestMethod]
-    public void TestRetrieveSingleEntry()
+    public void TestRetrieveSingleVaultItem()
     {
         var caller = new BitwardenCaller();
         var secrets = Helper.GenerateSecrets();
@@ -47,7 +47,7 @@ public class TestBitwardenCaller
         caller.Login(loginData);
 
         var getParams = new GetParameters(secrets.TestVaultItemNameSingle);
-        var entries = caller.RetrieveEntry(getParams);
+        var entries = caller.RetrieveVaultItems(getParams);
 
         Assert.IsNotNull(entries);
         Assert.AreEqual(1, entries.Count);
@@ -60,7 +60,7 @@ public class TestBitwardenCaller
     }
 
     [TestMethod]
-    public void TestRetrieveMultipleEntries()
+    public void TestRetrieveMultipleVaultItems()
     {
         var caller = new BitwardenCaller();
         var secrets = Helper.GenerateSecrets();
@@ -69,7 +69,7 @@ public class TestBitwardenCaller
         caller.Login(loginData);
 
         var getParams = new GetParameters(secrets.TestVaultItemNameMultiple);
-        var entries = caller.RetrieveEntry(getParams);
+        var entries = caller.RetrieveVaultItems(getParams);
 
         Assert.IsNotNull(entries);
         Assert.IsTrue(entries.Count > 1);

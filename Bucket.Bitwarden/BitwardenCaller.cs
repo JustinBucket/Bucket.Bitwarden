@@ -56,7 +56,7 @@ namespace Bucket.Bitwarden
             ExecuteCommand(SyncCommand).Trim();
         }
 
-        public ICollection<VaultItem> RetrieveEntry(GetParameters getParams)
+        public ICollection<VaultItem> RetrieveVaultItems(GetParameters getParams)
         {
             var command = GetCommand.Replace("{query}", getParams.GenerateQueryString());
             var output = ExecuteCommand(command).Trim();
@@ -71,11 +71,11 @@ namespace Bucket.Bitwarden
             }
             catch (Exception)
             {
-                return RetrieveEntries(output);
+                return RetrieveVaultItems(output);
             }
         }
 
-        private IList<VaultItem> RetrieveEntries(string commandOutput)
+        private IList<VaultItem> RetrieveVaultItems(string commandOutput)
         {
             var vaultItems = new List<VaultItem>();
 
