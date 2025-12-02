@@ -5,10 +5,12 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Runtime.InteropServices;
+using System.Runtime.InteropServices.ComTypes;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Bucket.Bitwarden.Auth;
+using Bucket.Bitwarden.Get;
 using Newtonsoft.Json;
 
 namespace Bucket.Bitwarden
@@ -17,7 +19,10 @@ namespace Bucket.Bitwarden
     {
         private readonly string LoginCommand = "bw.exe login {email} {password}";
         private readonly string LogoutCommand = "bw.exe logout";
+        private readonly string SyncCommand = "bw.exe sync";
+        private readonly string GetCommand = "bw.exe get {query}";
         private readonly string SessionKeyRegex = "(?<=BW_SESSION=\").+(?=\")";
+        private readonly string GuidRegex = @"(?im)^[{(]?[0-9A-F]{8}[-]?(?:[0-9A-F]{4}[-]?){3}[0-9A-F]{12}[)}]?$";
         private readonly Process _cmd;
         // https://identity.bitwarden.com/connect/token
         // what if we made the whole thing based off the console?
@@ -46,21 +51,55 @@ namespace Bucket.Bitwarden
             Environment.SetEnvironmentVariable("BW_SESSION", null);
         }
 
+        private void Sync()
+        {
+            ExecuteCommand(SyncCommand).Trim();
+        }
+
+        public ICollection<VaultItem> RetrieveEntry(GetParameters getParams)
+        {
+            var command = GetCommand.Replace("{query}", getParams.GenerateQueryString());
+            var output = ExecuteCommand(command).Trim();
+
+            // check if it's a json string
+            // if is, parse into response
+            // if not, parse again for each returned guid if they're there
+            try
+            {
+                var vaultItem = JsonConvert.DeserializeObject<VaultItem>(output);
+                return new List<VaultItem>() { vaultItem };
+            }
+            catch (Exception)
+            {
+                return RetrieveEntries(output);
+            }
+        }
+
+        private IList<VaultItem> RetrieveEntries(string commandOutput)
+        {
+            var vaultItems = new List<VaultItem>();
+
+            var ids = Regex.Matches(commandOutput, @"[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}");
+            
+            foreach (var id in ids)
+            {
+                var getParams = new GetParameters(Guid.Parse(id.ToString()));
+                var command = GetCommand.Replace("{query}", getParams.GenerateQueryString());
+
+                var output = ExecuteCommand(command).Trim();
+                var vaultItem = JsonConvert.DeserializeObject<VaultItem>(output);
+                vaultItems.Add(vaultItem);
+            }
+
+            // check if it's a json string
+            // if is, parse into response
+            // if not, parse again for each returned guid if they're there
+
+            return vaultItems;
+        }
+
         private string ExecuteCommand(string command)
         {
-            // var process = new Process();
-            // process.StartInfo.FileName = "cmd.exe";
-            // process.StartInfo.Arguments = $"/C {command}";
-            // process.StartInfo.UseShellExecute = false;
-            // process.StartInfo.CreateNoWindow = true;
-            // process.StartInfo.RedirectStandardInput = true;
-            // process.StartInfo.RedirectStandardOutput = true;
-            // process.Start();
-
-            // var output = process.StandardOutput.ReadToEnd();
-
-            // process.Close();
-
             _cmd.StartInfo.Arguments = $"/C {command}";
             _cmd.Start();
             var output = _cmd.StandardOutput.ReadToEnd();
@@ -72,39 +111,6 @@ namespace Bucket.Bitwarden
 
             return output;
         }
-
-        // public async Task<HttpStatusCode> UnlockVault(string masterPassword)
-        // {
-        //     // this is going to need to use their cli apparently?
-        //     // we have to log into the cli first, then we can maybe serve?
-        //     // asks for OTP in email
-        //     // what a mess
-        //     // check if we've got an expiry date, meaning haven't performed authentication
-        //     if (_authExpiryDate.Equals(DateTime.MinValue))
-        //     {
-        //         throw new AuthException("Authentication not performed");
-        //     }
-
-        //     // check if passed authentication lifetime
-        //     if (DateTime.Now > _authExpiryDate)
-        //     {
-        //         throw new AuthException("Authentication expired");
-                
-        //     }
-
-        //     var passwordDto = new UnlockRequestDto(masterPassword);
-        //     var content = new StringContent(JsonConvert.SerializeObject(passwordDto), Encoding.UTF8, "application/json");
-        //     var response = await _client.PostAsync(@"unlock", content);
-
-        //     if (response.IsSuccessStatusCode)
-        //     {
-        //         var responseContent = await response.Content.ReadAsStringAsync();
-        //         var responseData = JsonConvert.DeserializeObject<UnlockData>(responseContent);
-        //         _sessionKey = responseData.Raw;
-        //     }
-
-        //     return response.StatusCode;
-        // }
 
     }
 }
