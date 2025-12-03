@@ -24,8 +24,6 @@ namespace Bucket.Bitwarden
         private readonly string SessionKeyRegex = "(?<=BW_SESSION=\").+(?=\")";
         private readonly string GuidRegex = @"(?im)^[{(]?[0-9A-F]{8}[-]?(?:[0-9A-F]{4}[-]?){3}[0-9A-F]{12}[)}]?$";
         private readonly Process _cmd;
-        // https://identity.bitwarden.com/connect/token
-        // what if we made the whole thing based off the console?
 
         public BitwardenCaller()
         {
@@ -36,13 +34,29 @@ namespace Bucket.Bitwarden
         {
             // call bw.exe, passing arguments
             var command = LoginCommand.Replace("{email}", data.Email).Replace("{password}", data.Password);
-            // var command = "dotnet --version";
 
+            // get output
             var commandOutput = ExecuteCommand(command).Trim();
 
-            var sessionKey = Regex.Matches(commandOutput, SessionKeyRegex)[0].Value;
+            // want to check if we're already logged in
+            if (commandOutput.Contains("You are already logged in"))
+            {
+                var sessionKey = Environment.GetEnvironmentVariable("BW_SESSION");
+                if (string.IsNullOrWhiteSpace(sessionKey))
+                {
+                    // logout and relogin if we don't have the session key stored for some reason
+                    Logout();
+                    Login(data);
+                }
+            }
+            else
+            {
+                // parse session key from output
+                var sessionKey = Regex.Matches(commandOutput, SessionKeyRegex)[0].Value;
+                Environment.SetEnvironmentVariable("BW_SESSION", sessionKey);
+            }
 
-            Environment.SetEnvironmentVariable("BW_SESSION", sessionKey);
+            Sync();
         }
 
         public void Logout()
@@ -79,7 +93,7 @@ namespace Bucket.Bitwarden
         {
             var vaultItems = new List<VaultItem>();
 
-            var ids = Regex.Matches(commandOutput, @"[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}");
+            var ids = Regex.Matches(commandOutput, GuidRegex);
             
             foreach (var id in ids)
             {
@@ -90,10 +104,6 @@ namespace Bucket.Bitwarden
                 var vaultItem = JsonConvert.DeserializeObject<VaultItem>(output);
                 vaultItems.Add(vaultItem);
             }
-
-            // check if it's a json string
-            // if is, parse into response
-            // if not, parse again for each returned guid if they're there
 
             return vaultItems;
         }

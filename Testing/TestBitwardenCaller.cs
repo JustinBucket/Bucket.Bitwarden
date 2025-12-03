@@ -82,4 +82,20 @@ public class TestBitwardenCaller
 
         caller.Logout();
     }
+
+    [TestMethod]
+    public void TestConsecutiveLoginAttempts()
+    {
+        var caller = new BitwardenCaller();
+        var secrets = Helper.GenerateSecrets();
+        var loginData = secrets.GenerateLoginData();
+
+        caller.Login(loginData);
+        caller.Login(loginData);
+        var sessionKey = Environment.GetEnvironmentVariable("BW_SESSION");
+
+        Assert.IsFalse(string.IsNullOrWhiteSpace(sessionKey));
+
+        caller.Logout();
+    }
 }
