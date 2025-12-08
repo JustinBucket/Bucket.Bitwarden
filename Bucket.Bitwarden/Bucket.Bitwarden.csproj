@@ -8,4 +8,10 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
   </ItemGroup>
 
+  <ItemGroup>
+   <Content Include="*bw.exe">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+   </Content>
+  </ItemGroup>
+
 </Project>
