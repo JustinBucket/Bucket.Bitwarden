@@ -2,6 +2,12 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <PackageId>Bucket.Bitwarden</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>JustinBucket</Authors>
+    <PackageLicenseFile>License.txt</PackageLicenseFile>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <RepositoryUrl>https://github.com/JustinBucket/Bucket.Bitwarden</RepositoryUrl>
   </PropertyGroup>
 
   <ItemGroup>
@@ -12,6 +18,11 @@
    <Content Include="*bw.exe">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+        <None Include="..\README.md" Pack="true" PackagePath=""/>
+        <None Include="..\License.txt" Pack="true" PackagePath=""/>
   </ItemGroup>
 
 </Project>
