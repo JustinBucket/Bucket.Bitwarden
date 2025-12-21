@@ -81,6 +81,7 @@ namespace Bucket.Bitwarden
             try
             {
                 var vaultItem = JsonConvert.DeserializeObject<VaultItem>(output);
+                
                 return new List<VaultItem>() { vaultItem };
             }
             catch (Exception)
