@@ -98,4 +98,26 @@ public class TestBitwardenCaller
 
         caller.Logout();
     }
+
+    [TestMethod]
+    public void TestCredentialPull()
+    {
+        var caller = new BitwardenCaller();
+        var secrets = Helper.GenerateSecrets();
+        var loginData = secrets.GenerateLoginData();
+
+        caller.Login(loginData);
+
+        var getParams = new GetParameters(secrets.TestVaultItemNameSingle);
+        var entries = caller.RetrieveVaultItems(getParams);
+
+        Assert.IsNotNull(entries);
+        Assert.AreEqual(1, entries.Count);
+
+        var entry = entries.First();
+        Assert.AreEqual(secrets.TestVaultItemNameSingle, entry.Name);
+        Assert.AreNotEqual(Guid.Empty, entry.Id);
+
+        caller.Logout();
+    }
 }
