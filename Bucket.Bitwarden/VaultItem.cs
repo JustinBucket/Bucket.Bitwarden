@@ -21,8 +21,7 @@ namespace Bucket.Bitwarden.Get
         public string Notes { get; set; }
         [JsonProperty("favorite")]
         public bool Favourite { get; set; }
-        public string Username { get; set; }
-        public string Password { get; set; }
+        public Login Login { get; set; }
         // have an idea what this is - think it's a <string, string> dictionary
         // public string[] Fields { get; set; }
     }

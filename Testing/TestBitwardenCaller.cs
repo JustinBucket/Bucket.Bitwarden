@@ -118,6 +118,10 @@ public class TestBitwardenCaller
         Assert.AreEqual(secrets.TestVaultItemNameSingle, entry.Name);
         Assert.AreNotEqual(Guid.Empty, entry.Id);
 
+        Assert.IsNotNull(entry.Login);
+        Assert.IsFalse(string.IsNullOrWhiteSpace(entry.Login.Username));
+        Assert.IsFalse(string.IsNullOrWhiteSpace(entry.Login.Password));
+
         caller.Logout();
     }
 }
