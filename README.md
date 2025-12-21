@@ -4,7 +4,7 @@
 Bucket.Bitwarden provides a wrapper for the Bitwarden CLI, exposing its methods for consumption programmatically.
 
 ## Installation
-Use the dotnet add command to isntall Bucket.Bitwarden
+Use the dotnet add package command to isntall Bucket.Bitwarden
 ```bash
 dotnet add Bucket.Bitwarden
 ```
